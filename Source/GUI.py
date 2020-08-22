@@ -60,8 +60,9 @@ def menu():
     background.pack()
     ini_frame.mainloop()
 
-if __name__ == "__main__": 
-    menu()
+#def end_dlg():
+
+
 
 # from tkinter import *
 # import time

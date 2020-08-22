@@ -1,6 +1,5 @@
 from tkinter import *
 import main
-import GUI
 from PIL import Image, ImageTk
 from random import randint
 
