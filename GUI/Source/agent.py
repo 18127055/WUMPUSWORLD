@@ -21,6 +21,7 @@ class agent(Frame):
     def draw_map(self):
         self.frame_maze = Canvas(width=self.size[1]*block_size,height = 600, bg='black')
 
+        #draw initial squares
         b_square = Image.open(r'../Image/ini_brick.jpg')
         b_square = ImageTk.PhotoImage(b_square.resize((block_size, block_size), Image.ANTIALIAS))
 
@@ -29,17 +30,42 @@ class agent(Frame):
                 self.frame_maze.create_image(c*block_size, r*block_size, anchor = NW, image = b_square)
         self.frame_maze.image = [b_square]
 
+        #draw lines between squares
         for r in range(0,3025,55):
             self.frame_maze.create_line(0,r,550,r,fill='#E5FFCC')
 
         for col in range(0,3025,55):
             self.frame_maze.create_line(col,0,col,550,fill='#E6E6FA')
 
-        self.frame_maze.create_text(50,570,fill = "navajo white", font="verdana 15", text = "Score: " )
-        self.frame_maze.create_text(100,570,fill = "peru", font="verdana 15", text = self.score )
+        #draw score
+        score_img = Image.open(r'../Image/score.png')
+        score_img = ImageTk.PhotoImage(score_img.resize((30,30), Image.ANTIALIAS))
 
-        self.frame_maze.create_text(455,570,fill = "navajo white", font="verdana 15", text = "Used Arrows: " )
-        self.frame_maze.create_text(535,570,fill = "peru", font="verdana 15", text = self.arrow)
+        self.frame_maze.create_image(15, 560, anchor = NW, image = score_img)
+        self.frame_maze.image.append(score_img)
+
+        self.frame_maze.create_text(70,575,fill = "navajo white", font="verdana 10", text = "Score: " )
+        self.frame_maze.create_text(97,575,fill = "#E6E6FA", font="verdana 10", text = self.score )
+
+        #draw used arrows
+        arrow_img = Image.open(r'../Image/arrow.png')
+        arrow_img = ImageTk.PhotoImage(arrow_img.resize((30,30), Image.ANTIALIAS))
+
+        self.frame_maze.create_image(410, 560, anchor = NW, image = arrow_img)
+        self.frame_maze.image.append(arrow_img)
+
+        self.frame_maze.create_text(485,575,fill = "navajo white", font="verdana 10", text = "Used Arrows: " )
+        self.frame_maze.create_text(535,575,fill = "#E6E6FA", font="verdana 10", text = 0)
+
+        #draw golds
+        gold_img = Image.open(r'../Image/gold.png')
+        gold_img = ImageTk.PhotoImage(gold_img.resize((30,30), Image.ANTIALIAS))
+
+        self.frame_maze.create_image(190, 560, anchor = NW, image = gold_img)
+        self.frame_maze.image.append(gold_img)
+
+        self.frame_maze.create_text(280,575,fill = "navajo white", font="verdana 10", text = "Remaining Golds: " )
+        self.frame_maze.create_text(340,575,fill = "#E6E6FA", font="verdana 10", text = 0)
 
     def draw_agent(self):
         agent_img = Image.open(r'../Image/forward.png')
