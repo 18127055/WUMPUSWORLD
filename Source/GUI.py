@@ -1,21 +1,22 @@
 from tkinter import *
 from PIL import Image, ImageTk
-import agent as agent
+from agent import *
+#import agent as agent
 
 def clear_entry(event, entry):
     entry.delete(0, END)
 
 def myClick():
-    path = input_entry.get()
+    path_file = input_entry.get()
     ini_frame.destroy()
     global draw_map
     draw_map = Tk()
     w, h = (draw_map.winfo_screenwidth()-10 *
-            agent.block_size)//2, (draw_map.winfo_screenheight()-10*agent.block_size)//2
+            block_size)//2, (draw_map.winfo_screenheight()-10*block_size)//2
     draw_map.geometry('+'+str(w)+'+'+str(h-60))
     draw_map.resizable(width=False, height=False)
     draw_map.title('GAME')
-    game = agent.agent(path,draw_map)
+    game = Wumpus_game(path_file,draw_map)
     draw_map.mainloop()
 
 def menu():
@@ -27,11 +28,11 @@ def menu():
 
     #create background
     background = Canvas(ini_frame, width=1000, height=1000, bg='black')
-    bg_img = Image.open(r'../Image/neon.jpg')
+    bg_img = Image.open(r'../WUMPUSWORLD/Image/neon.jpg')
     bg_img = ImageTk.PhotoImage(bg_img.resize((700,500), Image.ANTIALIAS))
     background.create_image(0, 0, anchor= NW, image=bg_img)
 
-    background_img = Image.open(r'../Image/logo4.png')
+    background_img = Image.open(r'../WUMPUSWORLD/Image/logo4.png')
     background_img = ImageTk.PhotoImage(background_img.resize((700, 400), Image.ANTIALIAS))
     background.create_image(0, 0, anchor= NW, image=background_img)
 
@@ -45,7 +46,7 @@ def menu():
     input_entry.bind("<Button-1>", lambda event: clear_entry(event, input_entry))
     
     #create open button
-    button_img = Image.open(r'../Image/video-player.png')
+    button_img = Image.open(r'../WUMPUSWORLD/Image/video-player.png')
     button_img = ImageTk.PhotoImage(button_img.resize((35, 35), Image.ANTIALIAS))
     lv2_btn = Button(ini_frame, text="LEVEL 2", command = myClick, borderwidth=0)
     lv2_btn.pack(padx=50, pady=20)
@@ -53,7 +54,7 @@ def menu():
     lv2_btn.config(height = 35, width = 35, activebackground='black', image=button_img)
 
     #create Wumpus image
-    wumpus_img = Image.open(r'../Image/wumpus.png')
+    wumpus_img = Image.open(r'../WUMPUSWORLD/Image/wumpus.png')
     wumpus_img = ImageTk.PhotoImage(wumpus_img.resize((80, 120), Image.ANTIALIAS))
     background.create_image(150, 310, anchor= NW, image=wumpus_img)
 
