@@ -13,11 +13,44 @@ class Wumpus_game(Frame):
             self.arrow = 0
             self.score = 0
             self.w_pos = []
-            self.maze = [[[0,0,0,0,0,0] for _ in range(size)] for _ in range(size)]
-            self.maze[size-1][0] = [0,0,0,0,0,1]
+            self.KB = [] #in menh de cho vi tri hien tai agent dang dung
+            self.maze = [[[0,0,0,0,0,0,0] for _ in range(size)] for _ in range(size)]
+            self.agent_pos = pos[randint(0,len(pos)-1)]
+            self.maze[self.agent_pos[0]][self.agent_pos[1]] = [0,0,0,0,0,1,0]
             self.frame = frame_maze
-            self.agent_pos = pos
-            self.draw_agent()
+            self.visited, self.path = [], []
+            if self.agent_pos[0] == 0:
+                if self.agent_pos[1] == 0:
+                    self.maze[0][1], self.maze[1][0] = [0,0,0,0,0,1,0], [0,0,0,0,0,1,0]
+                    self.KB.append('OK[10][1] -> (OK[9][1] ^ OK[10][2])')
+                elif self.agent_pos[1] == size - 1:
+                    self.maze[0][size - 2], self.maze[1][size - 1] = [0,0,0,0,0,1,0], [0,0,0,0,0,1,0]
+                    self.KB.append('OK[10][10] -> (OK[10][9] ^ OK[9][10])')
+                else:
+                    self.maze[0][self.agent_pos[1]+1],self.maze[0][self.agent_pos[1]-1], self.maze[1][self.agent_pos[1]+1] = [0,0,0,0,0,1,0], [0,0,0,0,0,1,0], [0,0,0,0,0,1,0]
+                    self.KB.append('OK[10][{i}] -> (OK[10][{j}] ^ OK[10][{k}] ^ OK[9][{i}])'.format(i = self.agent_pos[1] + 1, j = self.agent_pos[1], k = self.agent_pos[1] + 2))
+            elif self.agent_pos[0] == size - 1:
+                if self.agent_pos[1] == 0:
+                    self.maze[size -1][1], self.maze[size -2][0] = [0,0,0,0,0,1,0], [0,0,0,0,0,1,0]
+                    self.KB.append('OK[1][1] -> (OK[2][1] ^ OK[1][2])')
+                elif self.agent_pos[1] == size - 1:
+                    self.maze[size -1][size - 2], self.maze[size -2][size - 1] = [0,0,0,0,0,1,0], [0,0,0,0,0,1,0]
+                    self.KB.append('OK[1][10] -> (OK[1][9] ^ OK[2][10])')
+                else:
+                    self.maze[size -1][self.agent_pos[1]+1],self.maze[0][self.agent_pos[1]-1], self.maze[1][self.agent_pos[1]+1] = [0,0,0,0,0,1,0], [0,0,0,0,0,1,0], [0,0,0,0,0,1,0]
+                    self.KB.append('OK[1][{i}] -> (OK[1][{j}] ^ OK[1][{k}] ^ OK[2][{i}])'.format(i = self.agent_pos[1] + 1, j = self.agent_pos[1], k = self.agent_pos[1]+2))
+            else:
+                if self.agent_pos[1] == 0:
+                    self.maze[self.agent_pos[0]][1], self.maze[self.agent_pos[0]-1][0], self.maze[self.agent_pos[0]+1][0] = [0,0,0,0,0,1,0], [0,0,0,0,0,1,0], [0,0,0,0,0,1,0]
+                    self.KB.append('OK[{i}][1] -> (OK[{j}][1] ^ OK[{i}][2] ^ OK[{k}][1])'.format(i = size - self.agent_pos[0], j = size - self.agent_pos[0] -1, k = size - self.agent_pos[0] + 1 ))
+                elif self.agent_pos[1] == size - 1:
+                    self.maze[self.agent_pos[0]][size - 2], self.maze[self.agent_pos[0] - 1][size - 1], self.maze[self.agent_pos[0] + 1][size - 1] = [0,0,0,0,0,1,0], [0,0,0,0,0,1,0], [0,0,0,0,0,1,0]
+                    self.KB.append('OK[{i}][10] -> (OK[{j}][10] ^ OK[{i}][9] ^ OK[{k}][10])'.format(i = size - self.agent_pos[0], j = size - self.agent_pos[0] -1, k = size - self.agent_pos[0] + 1 ))
+                else:
+                    self.maze[self.agent_pos[0]][self.agent_pos[1]+1],self.maze[self.agent_pos[0]][self.agent_pos[1]-1], self.maze[self.agent_pos[0]+1][self.agent_pos[1]], self.maze[self.agent_pos[0]-1][self.agent_pos[1]]  = [0,0,0,0,0,1,0], [0,0,0,0,0,1,0], [0,0,0,0,0,1,0], [0,0,0,0,0,1,0]
+                    self.KB.append('OK[{i1}][{j1}] -> (OK[{i2}][{j1}] ^ OK[{i3}][{j1}] ^ OK[{i1}][{j2}] ^ OK[{i1}][{j3}])'.format(i1 = size - self.agent_pos[0], j1 = self.agent_pos[1]+1, i2 = size - self.agent_pos[0] -1, i3 = size - self.agent_pos[0] +1, j2 = self.agent_pos[1], j3 = self.agent_pos[1] +2))
+            self.KB.append('V[{i}][{j}]'.format(i = size - self.agent_pos[0], j = self.agent_pos[1] + 1))
+            #self.draw_agent()
         
         def draw_agent(self):
                 agent_img = Image.open(r'../Image/right.png')
@@ -27,21 +60,24 @@ class Wumpus_game(Frame):
                 self.agent = self.frame.create_image(
                         self.agent_pos[1]*block_size, self.agent_pos[0]*block_size, anchor=NW, image=agent_img)
                 self.frame.image.append(agent_img)
-
+                self.maze[self.agent_pos[0]][self.agent_pos[1]][6] = 1
+                print(self.KB)
+                print('P, B, W, S, G, OK, V')
+    
     def __init__(self, path_file, master=None):
         super().__init__(master)
         self.filename = "../Map/" + path_file
         self.arrow, self.score, self.gold = 0, 10000, 5
         self.w_pos, self.maze = [], []
         self.readFile()
-        self.frame_maze = Canvas(width=self.size*block_size,height = self.size*block_size, bg='black')
+        self.frame_maze = Canvas(width=self.size*block_size,height = self.size*block_size +50, bg='black')
+        self.frame_maze.image = []
+        self.agent = Wumpus_game.Agent(self.frame_maze,self.emp_tile,self.size,master)
         self.draw_map()
-        self.agent = Wumpus_game.Agent(self.frame_maze,(self.size-1,0),self.size,master)
+        self.agent.draw_agent()
         self.frame_maze.pack()
 
     def draw_map(self):
-        self.frame_maze = Canvas(width=self.size*block_size,height = self.size*block_size +50, bg='black')
-
         #draw initial bricks
         b_square = Image.open(r'../Image/ini_brick.jpg')
         b_square = ImageTk.PhotoImage(b_square.resize((block_size, block_size), Image.ANTIALIAS))
@@ -49,20 +85,20 @@ class Wumpus_game(Frame):
         for r in range(self.size):  # get x
             for c in range(self.size):  # get y
                 self.frame_maze.create_image(c*block_size, r*block_size, anchor = NW, image = b_square)
-        self.frame_maze.image = [b_square]
+        self.frame_maze.image.append(b_square)
 
         #draw visited_brick: initial agent's position
         v_square = Image.open(r'../Image/visited_brick.jpg')
         v_square = ImageTk.PhotoImage(v_square.resize((block_size, block_size), Image.ANTIALIAS))
-        self.frame_maze.create_image(0*block_size, (self.size-1)*block_size, anchor = NW, image = v_square)
+        self.frame_maze.create_image(self.agent.agent_pos[1]*block_size, self.agent.agent_pos[0]*block_size, anchor = NW, image = v_square)
         self.frame_maze.image.append(v_square)
 
         #draw lines between squares
         for r in range(0,3025,55):
-            self.frame_maze.create_line(0,r,55*self.size,r,fill='#E5FFCC')
+            self.frame_maze.create_line(0,r,55*self.size,r,fill='black')
 
         for col in range(0,3025,55):
-            self.frame_maze.create_line(col,0,col,55*self.size,fill='#E6E6FA')
+            self.frame_maze.create_line(col,0,col,55*self.size,fill='black')
 
         #draw score
         score_img = Image.open(r'../Image/score.png')
@@ -97,8 +133,9 @@ class Wumpus_game(Frame):
     def readFile(self):
         with open(self.filename) as f:
             self.size = int(f.readline())
-            #[0,0,0,0,0,0]: P B W S G OK
-            self.maze = [[[0,0,0,0,0,0] for _ in range(self.size)] for _ in range(self.size)]
+            #[0,0,0,0,0,0,0]: P B W S G OK V
+            self.maze = [[[0,0,0,0,0,0,0] for _ in range(self.size)] for _ in range(self.size)]
+            self.emp_tile = []
             for i in range(self.size):
                 t = f.readline().split('.')
                 for j in range(self.size):
@@ -116,3 +153,4 @@ class Wumpus_game(Frame):
                             self.maze[i][j][4]=1
                         elif k == '-':
                             self.maze[i][j][5]=1
+                            self.emp_tile.append((i,j))

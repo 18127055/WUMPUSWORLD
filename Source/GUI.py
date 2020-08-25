@@ -5,7 +5,7 @@ from agent import *
 def clear_entry(event, entry):
     entry.delete(0, END)
 
-def myClick():
+def myClick(event = NONE):
     path_file = input_entry.get()
     ini_frame.destroy()
     global draw_map
@@ -43,6 +43,7 @@ def menu():
     placeholder_text = 'Input map path here: '
     input_entry.insert(0, placeholder_text)
     input_entry.bind("<Button-1>", lambda event: clear_entry(event, input_entry))
+    input_entry.bind('<Return>', myClick)
     
     #create open button
     button_img = Image.open(r'../Image/video-player.png')
