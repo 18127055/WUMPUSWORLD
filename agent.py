@@ -138,17 +138,21 @@ class Wumpus_game(Frame):
             adj_r = self.adj()
             step = self.checkIfBSO(adj_r)
             self.path = []
-            for i in step:
-                if i in self.moveable:
-                    self.path.append(i)
-                    del self.moveable[self.moveable.index(i)]
-                    break
-                self.path = []
-            if len(self.path) == 0:
-                dist_a_emp = [manhattan(self.a_pos,move) for move in self.moveable]
-                move_min = self.moveable[dist_a_emp.index(min(dist_a_emp))]
-                dist_m_step = [manhattan(st,move_min) for st in step]
-                self.path.append(step[dist_m_step.index(min(dist_m_step))])
+            if len(self.moveable) == 0:
+                dist_cave = [manhattan(self.cave,st) for st in step]
+                self.path.append(step[dist_cave.index(min(dist_cave))])
+            else:
+                for i in step:
+                    if i in self.moveable:
+                        self.path.append(i)
+                        del self.moveable[self.moveable.index(i)]
+                        break
+                    self.path = []
+                if len(self.path) == 0:
+                    dist_a_emp = [manhattan(self.a_pos,move) for move in self.moveable]
+                    move_min = self.moveable[dist_a_emp.index(min(dist_a_emp))]
+                    dist_m_step = [manhattan(st,move_min) for st in step]
+                    self.path.append(step[dist_m_step.index(min(dist_m_step))])
         
         def getPercept(self, maze):
             for i in range(7):
@@ -189,12 +193,13 @@ class Wumpus_game(Frame):
                 print(self.KB)
                 return 'c', 0
             #move
+            temp = self.a_pos            
             self.a_pos = self.path[0]
             self.maze[self.a_pos[0]][self.a_pos[1]][6] = 1
             self.KB.append('MoveTo[{i}][{j}] -> V[{i}][{j}]'.format(i= self.m_size - self.a_pos[0], j= self.a_pos[1]+1))
             self.path.pop(0)
             print(self.KB)
-            return 'm', 0
+            return 'm', temp 
 
         def play(self, maze):
             self.getPercept(maze)
@@ -271,8 +276,8 @@ class Wumpus_game(Frame):
         sign, r = self.agent.play(deepcopy(self.maze))
         while sign not in ['c','d']:
             sign, r = self.agent.play(deepcopy(self.maze))
+            self.agent.a_pos
         
-
     def readFile(self):
         with open(self.filename) as f:
             self.size = int(f.readline())
