@@ -1,8 +1,11 @@
 from tkinter import *
 import main
+import GUI as g
 from PIL import Image, ImageTk
 from random import randint
 from copy import deepcopy
+from tkinter import messagebox
+import time
 
 block_size = 55
 
@@ -26,19 +29,11 @@ class Wumpus_game(Frame):
             self.maze[self.a_pos[0]][self.a_pos[1]] = [0,0,0,0,0,1,0]
             self.frame = frame_maze
             self.visited, self.path, self.moveable = [], [], []
+            self.maze[self.a_pos[0]][self.a_pos[1]][6] = 1
+
             #self.draw_agent()
-        
-        def draw_agent(self):
-                agent_img = Image.open(r'../WUMPUSWORLD/Image/right.png')
-                agent_img = agent_img.resize(
-                        (block_size, block_size), Image.ANTIALIAS)
-                agent_img = ImageTk.PhotoImage(agent_img)
-                self.agent = self.frame.create_image(
-                        self.a_pos[1]*block_size, self.a_pos[0]*block_size, anchor=NW, image=agent_img)
-                self.frame.image.append(agent_img)
-                self.maze[self.a_pos[0]][self.a_pos[1]][6] = 1
-                print(self.KB)
-                #print('P, B, W, S, G, OK, V')
+    
+        #print('P, B, W, S, G, OK, V')
 
         def adj(self, p = None):
             adj_room = []
@@ -79,8 +74,9 @@ class Wumpus_game(Frame):
                 for room in adj_r:
                     if self.maze[room[0]][room[1]][5] == 0 or self.maze[room[0]][room[1]][2] == 0 :
                         self.maze[room[0]][room[1]][0] +=1
-                    elif self.maze[room[0]][room[1]][2] != 0:
+                    elif self.maze[room[0]][room[1]][5] == 0 and self.maze[room[0]][room[1]][2] != 0:
                         self.maze[room[0]][room[1]][2] = 0
+                        self.maze[room[0]][room[1]][5] = 1
                         self.KB.append('-W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                         if self.maze[room[0]][room[1]][0] != 0:
                             self.maze[room[0]][room[1]][0] += 1
@@ -145,7 +141,7 @@ class Wumpus_game(Frame):
                 for i in step:
                     if i in self.moveable:
                         self.path.append(i)
-                        del self.moveable[self.moveable.index(i)]
+                        self.moveable.pop(self.moveable.index(i))
                         break
                     self.path = []
                 if len(self.path) == 0:
@@ -172,13 +168,13 @@ class Wumpus_game(Frame):
             #shoot, move, grab, climb, die
             #die
             if self.maze[self.a_pos[0]][self.a_pos[1]][0] != 0 or self.maze[self.a_pos[0]][self.a_pos[1]][2] != 0:
-                print(self.KB)
+                #print(self.KB)
                 return 'd', 0
             #grab
             if self.maze[self.a_pos[0]][self.a_pos[1]][4] == 1:
                 self.KB.append('G[{i}][{j}] -> Grab[{i}][{j}]'.format(i = self.size - self.a_pos[0], j = self.a_pos[1]+1))
                 sign = self.grab(self.a_pos)
-                print(self.KB)
+                #print(self.KB)
                 return sign, 0
             #shoot
             adj_r = self.adj(self.a_pos)
@@ -186,11 +182,11 @@ class Wumpus_game(Frame):
                 if self.maze[room[0]][room[1]][2] == 2:
                     self.KB.append('W[{i}][{j}] -> Shoot[{i}][{j}]'.format(i = self.size - room[0], j = room[1]+1))
                     sign = self.shoot(room)
-                    print(self.KB)
+                    #print(self.KB)
                     return sign, room
             #climb
             if len(self.moveable) == 0 and self.a_pos == self.cave:
-                print(self.KB)
+                #print(self.KB)
                 return 'c', 0
             #move
             temp = self.a_pos            
@@ -198,12 +194,13 @@ class Wumpus_game(Frame):
             self.maze[self.a_pos[0]][self.a_pos[1]][6] = 1
             self.KB.append('MoveTo[{i}][{j}] -> V[{i}][{j}]'.format(i= self.m_size - self.a_pos[0], j= self.a_pos[1]+1))
             self.path.pop(0)
-            print(self.KB)
+            #print(self.KB)
             return 'm', temp 
 
         def play(self, maze):
             self.getPercept(maze)
             self.agent_path()
+            print(self.moveable)
             return self.action()
 
     def __init__(self, path_file, master=None):
@@ -211,31 +208,92 @@ class Wumpus_game(Frame):
         self.filename = "../WUMPUSWORLD/Map/" + path_file
         self.arrow, self.score, self.gold = 0, 10000, 5
         self.w_pos, self.maze = [], []
+        self.s, self.g, self.brick, self.w = [], [], [], []
         self.readFile()
         self.frame_maze = Canvas(width=self.size*block_size,height = self.size*block_size +50, bg='black')
         self.frame_maze.image = []
+        self.a_img = None
         self.agent = Wumpus_game.Agent(self.frame_maze,self.emp_tile,self.size,master)
+        self.imgdict = {}
         self.draw_map()
-        self.agent.draw_agent()
         self.frame_maze.pack()
 
     def draw_map(self):
+        self.frame_maze = Canvas(width=self.size*block_size,height = self.size*block_size +50, bg='black')
+
         #draw initial bricks
         b_square = Image.open(r'../WUMPUSWORLD/Image/ini_brick.jpg')
         b_square = ImageTk.PhotoImage(b_square.resize((block_size, block_size), Image.ANTIALIAS))
+        self.imgdict["Inital"] = b_square
 
-        for r in range(self.size):  # get x
-            for c in range(self.size):  # get y
-                self.frame_maze.create_image(c*block_size, r*block_size, anchor = NW, image = b_square)
-        self.frame_maze.image.append(b_square)
-
-        #draw visited_brick: initial agent's position
+        #visited bricks
         v_square = Image.open(r'../WUMPUSWORLD/Image/visited_brick.jpg')
         v_square = ImageTk.PhotoImage(v_square.resize((block_size, block_size), Image.ANTIALIAS))
-        self.frame_maze.create_image(self.agent.a_pos[1]*block_size, self.agent.a_pos[0]*block_size, anchor = NW, image = v_square)
-        self.frame_maze.image.append(v_square)
+        self.imgdict["Visited"] = v_square
+
+        #gold_img
+        gold_img = Image.open(r'../WUMPUSWORLD/Image/gold.png')
+        gold_img = ImageTk.PhotoImage(gold_img.resize((30,30),Image.ANTIALIAS))
+        self.imgdict["Gold"] = gold_img
+
+        #breeze_img
+        breeze_img = Image.open(r'../WUMPUSWORLD/Image/wind.png')
+        breeze_img = ImageTk.PhotoImage(breeze_img.resize((30,30), Image.ANTIALIAS))
+        self.imgdict["Breeze"] = breeze_img
+
+        #stench_img
+        stench_img = Image.open(r'../WUMPUSWORLD/Image/stench.png')
+        stench_img = ImageTk.PhotoImage(stench_img.resize((30,30), Image.ANTIALIAS))
+        self.imgdict["Stech"] = stench_img
+        
+        #wumpus_img
+        wumpus_img = Image.open(r'../WUMPUSWORLD/Image/w1.png')
+        wumpus_img = ImageTk.PhotoImage(wumpus_img.resize((70,50), Image.ANTIALIAS))
+        self.imgdict["Wumpus"] = wumpus_img
+
+        #pit_img
+        pit_img = Image.open(r'../WUMPUSWORLD/Image/pit_1.png')
+        pit_img = ImageTk.PhotoImage(pit_img.resize((50,50), Image.ANTIALIAS))
+        self.imgdict["Pit"] = pit_img
+
+        for r in range(self.size):  # get x
+            for c in range(self.size):  # get y    
+                self.frame_maze.create_image(c*block_size, r*block_size, anchor = NW, image = v_square)
+        self.frame_maze.image = [v_square]
 
         #draw lines between squares
+        for r in range(0,3025,55):
+            self.frame_maze.create_line(0,r,55*self.size,r,fill='black')
+
+        for col in range(0,3025,55):
+            self.frame_maze.create_line(col,0,col,55*self.size,fill='black')
+
+        for r in range(10):
+            for c in range(10):
+                if self.maze[r][c][1] == 1:
+                    self.frame_maze.create_image(c*block_size+10, r*block_size+28, anchor = NW, image = breeze_img)
+                if self.maze[r][c][0] == 1:
+                    self.frame_maze.create_image(c*block_size+5, r*block_size+5, anchor = NW, image = pit_img)
+                if self.maze[r][c][2] == 1:
+                    self.w.append([self.frame_maze.create_image(c*block_size-2, r*block_size, anchor = NW, image = wumpus_img), (r,c)])
+                if self.maze[r][c][3] == 1:
+                    self.s.append([self.frame_maze.create_image(c*block_size+10, r*block_size-2, anchor = NW, image = stench_img), (r,c)])
+                if self.maze[r][c][4] == 1:
+                    self.g.append([self.frame_maze.create_image(c*block_size+20, r*block_size+5, anchor = NW, image = gold_img), (r,c)])
+
+        self.frame_maze.image.append(gold_img)
+        self.frame_maze.image.append(breeze_img)
+        self.frame_maze.image.append(pit_img)
+        self.frame_maze.image.append(wumpus_img)
+        self.frame_maze.image.append(stench_img)
+
+        for r in range(self.size):  # get y - i
+            temp = []
+            for c in range(self.size):  # get x - j   
+                temp.append(self.frame_maze.create_image(c*block_size, r*block_size, anchor = NW, image = b_square))
+            self.brick.append(temp)
+        self.frame_maze.image.append(b_square)
+
         for r in range(0,3025,55):
             self.frame_maze.create_line(0,r,55*self.size,r,fill='black')
 
@@ -249,8 +307,8 @@ class Wumpus_game(Frame):
         self.frame_maze.create_image(15, 55*self.size + 10, anchor = NW, image = score_img)
         self.frame_maze.image.append(score_img)
 
-        self.frame_maze.create_text(70,55*self.size + 25,fill = "navajo white", font="verdana 10", text = "Score: " )
-        self.frame_maze.create_text(120,55*self.size + 25,fill = "#E6E6FA", font="verdana 10", text = self.score )
+        self.frame_maze.create_text(70,55*self.size + 25,fill = "navajo white", font="purisa 10", text = "Score: " )
+        self.frame_maze.create_text(120,55*self.size + 25,fill = "#E6E6FA", font="purisa 10", text = self.score )
 
         #draw used arrows
         arrow_img = Image.open(r'../WUMPUSWORLD/Image/arrow.png')
@@ -259,8 +317,8 @@ class Wumpus_game(Frame):
         self.frame_maze.create_image(410, 55*self.size + 10, anchor = NW, image = arrow_img)
         self.frame_maze.image.append(arrow_img)
 
-        self.frame_maze.create_text(485,55*self.size + 25,fill = "navajo white", font="verdana 10", text = "Used Arrows: " )
-        self.frame_maze.create_text(535,55*self.size + 25,fill = "#E6E6FA", font="verdana 10", text = self.arrow)
+        self.frame_maze.create_text(485,55*self.size + 25,fill = "navajo white", font="purisa 10", text = "Used Arrows: " )
+        self.frame_maze.create_text(535,55*self.size + 25,fill = "#E6E6FA", font="purisa 10", text = self.arrow)
 
         #draw golds
         gold_img = Image.open(r'../WUMPUSWORLD/Image/gold.png')
@@ -269,14 +327,49 @@ class Wumpus_game(Frame):
         self.frame_maze.create_image(190, 55*self.size + 10, anchor = NW, image = gold_img)
         self.frame_maze.image.append(gold_img)
 
-        self.frame_maze.create_text(280,55*self.size + 25,fill = "navajo white", font="verdana 10", text = "Remaining Golds: " )
-        self.frame_maze.create_text(340,55*self.size + 25,fill = "#E6E6FA", font="verdana 10", text = self.gold)
+        self.frame_maze.create_text(280,55*self.size + 25,fill = "navajo white", font="purisa 10", text = "Remaining Golds: " )
+        self.frame_maze.create_text(340,55*self.size + 25,fill = "#E6E6FA", font="purisa 10", text = self.gold)
     
+        #agent_img
+        agent_img = Image.open(r'../WUMPUSWORLD/Image/right.png')
+        agent_img = agent_img.resize(
+                        (block_size, block_size), Image.ANTIALIAS)
+        agent_img = ImageTk.PhotoImage(agent_img)
+        self.imgdict["Right"] = agent_img
+
+        self.frame_maze.delete(self.brick[self.agent.a_pos[0]][self.agent.a_pos[1]])
+        self.brick[self.agent.a_pos[0]][self.agent.a_pos[1]] = None
+        self.a_img = self.frame_maze.create_image(
+                self.agent.a_pos[1]*block_size, self.agent.a_pos[0]*block_size, anchor=NW, image=agent_img)
+        self.frame_maze.image.append(agent_img)
+
+        left_img = Image.open(r'../WUMPUSWORLD/Image/left.png')
+        left_img = left_img.resize(
+                        (block_size, block_size), Image.ANTIALIAS)
+        left_img = ImageTk.PhotoImage(left_img)
+        self.frame_maze.image.append(left_img)
+        self.imgdict["Left"] = left_img
+
+        up_img = Image.open(r'../WUMPUSWORLD/Image/forward.png')
+        up_img = up_img.resize(
+                        (block_size, block_size), Image.ANTIALIAS)
+        up_img = ImageTk.PhotoImage(up_img)
+        self.frame_maze.image.append(up_img)
+        self.imgdict["Up"] = up_img
+
+        down_img = Image.open(r'../WUMPUSWORLD/Image/backward.png')
+        down_img = down_img.resize(
+                        (block_size, block_size), Image.ANTIALIAS)
+        down_img = ImageTk.PhotoImage(down_img)
+        self.frame_maze.image.append(down_img)
+        self.imgdict["Down"] = down_img
+
     def Play(self):
-        sign, r = self.agent.play(deepcopy(self.maze))
+        sign = 'm'
         while sign not in ['c','d']:
             sign, r = self.agent.play(deepcopy(self.maze))
-            self.agent.a_pos
+            self.spe_move(sign, r)
+            time.sleep(0.5)
         
     def readFile(self):
         with open(self.filename) as f:
@@ -302,3 +395,140 @@ class Wumpus_game(Frame):
                         elif k == '-':
                             self.maze[i][j][5]=1
                             self.emp_tile.append((i,j))
+
+    def direction(self, cur, n_pos):
+        if cur[1] > n_pos[1]:
+            return 'l'
+        elif cur[1] < n_pos[1]:
+            return 'r'
+        elif cur[0] > n_pos[0]:
+            return 'u'
+        elif cur[0] > n_pos[0]:
+            return 'd'
+    
+    def move(self, cur, n_pos):
+        dir = self.direction(cur, n_pos)
+        if dir == 'l':
+            self.frame_maze.delete(self.a_img)
+            self.a_img = self.frame_maze.create_image(cur[1]*block_size, cur[0]*block_size, anchor = NW, image = self.imgdict["Left"])
+            self.frame_maze.update()
+            self.frame_maze.after(50)
+            self.frame_maze.delete(self.a_img)
+            self.frame_maze.delete(self.brick[n_pos[0]][n_pos[1]])
+            self.brick[n_pos[0]][n_pos[1]] = None
+            self.a_img = self.frame_maze.create_image(n_pos[1]*block_size, n_pos[0]*block_size, anchor = NW, image = self.imgdict["Left"])
+        elif dir == 'r':
+            self.frame_maze.delete(self.a_img)
+            self.a_img = self.frame_maze.create_image(cur[1]*block_size, cur[0]*block_size, anchor = NW, image = self.imgdict["Right"])
+            self.frame_maze.update()
+            self.frame_maze.after(50)
+            self.frame_maze.delete(self.a_img)
+            self.frame_maze.delete(self.brick[n_pos[0]][n_pos[1]])
+            self.brick[n_pos[0]][n_pos[1]] = None
+            self.a_img = self.frame_maze.create_image(n_pos[1]*block_size, n_pos[0]*block_size, anchor = NW, image = self.imgdict["Right"])
+        elif dir == 'u':
+            self.frame_maze.delete(self.a_img)
+            self.a_img = self.frame_maze.create_image(cur[1]*block_size, cur[0]*block_size, anchor = NW, image = self.imgdict["Up"])
+            self.frame_maze.update()
+            self.frame_maze.after(50)
+            self.frame_maze.delete(self.a_img)
+            self.frame_maze.delete(self.brick[n_pos[0]][n_pos[1]])
+            self.brick[n_pos[0]][n_pos[1]] = None
+            self.a_img = self.frame_maze.create_image(n_pos[1]*block_size, n_pos[0]*block_size, anchor = NW, image = self.imgdict["Up"])
+        elif dir == 'd':
+            self.frame_maze.delete(self.a_img)
+            self.a_img = self.frame_maze.create_image(cur[1]*block_size, cur[0]*block_size, anchor = NW, image = self.imgdict["Down"])
+            self.frame_maze.update()
+            self.frame_maze.after(50)
+            self.frame_maze.delete(self.a_img)
+            self.frame_maze.delete(self.brick[n_pos[0]][n_pos[1]])
+            self.brick[n_pos[0]][n_pos[1]] = None
+            self.a_img = self.frame_maze.create_image(n_pos[1]*block_size, n_pos[0]*block_size, anchor = NW, image = self.imgdict["Down"])
+        
+        self.maze[n_pos[0]][n_pos[1]][5] = 1
+        self.maze[n_pos[0]][n_pos[1]][6] = 1
+        self.frame_maze.pack()
+
+    def shoot(self, wum_pos):
+        dir = self.direction(self.agent.a_pos, wum_pos)
+        if dir == 'l':
+            tup_pos = [t[1] for t in self.w]
+            i = tup_pos.index((wum_pos[0], wum_pos[1]))
+            del_w = self.w[i][0]
+
+            self.frame_maze.delete(self.a_img)
+            self.frame_maze.delete(del_w)
+            self.a_img = self.frame_maze.create_image(self.agent.a_pos[0]*block_size, self.agent.a_pos[1]*block_size, anchor = NW, image = self.imgdict["Left"])
+            self.frame_maze.delete(self.brick[wum_pos[0]][wum_pos[1]])
+            self.brick[wum_pos[0]][wum_pos[1]] = None
+
+        elif dir == 'r':
+            tup_pos = [t[1] for t in self.w]
+            i = tup_pos.index((wum_pos[0], wum_pos[1]))
+            del_w = self.w[i][0]
+
+            self.frame_maze.delete(self.a_img)
+            self.frame_maze.delete(del_w)
+            self.a_img = self.frame_maze.create_image(self.agent.a_pos[0]*block_size, self.agent.a_pos[1]*block_size, anchor = NW, image = self.imgdict["Right"])
+            self.frame_maze.delete(self.brick[wum_pos[0]][wum_pos[1]])
+            self.brick[wum_pos[0]][wum_pos[1]] = None
+        elif dir == 'u':
+            tup_pos = [t[1] for t in self.w]
+            i = tup_pos.index((wum_pos[0], wum_pos[1]))
+            del_w = self.w[i][0]
+
+            self.frame_maze.delete(self.a_img)
+            self.frame_maze.delete(del_w)
+            self.a_img = self.frame_maze.create_image(self.agent.a_pos[0]*block_size, self.agent.a_pos[1]*block_size, anchor = NW, image = self.imgdict["Up"])
+            self.frame_maze.delete(self.brick[wum_pos[0]][wum_pos[1]])
+            self.brick[wum_pos[0]][wum_pos[1]] = None
+        elif dir == 'd':
+            tup_pos = [t[1] for t in self.w]
+            i = tup_pos.index((wum_pos[0], wum_pos[1]))
+            del_w = self.w[i][0]
+
+            self.frame_maze.delete(self.a_img)
+            self.frame_maze.delete(del_w)
+            self.a_img = self.frame_maze.create_image(self.agent.a_pos[0]*block_size, self.agent.a_pos[1]*block_size, anchor = NW, image = self.imgdict["Down"])
+            self.frame_maze.delete(self.brick[wum_pos[0]][wum_pos[1]])
+            self.brick[wum_pos[0]][wum_pos[1]] = None
+
+        self.maze[wum_pos[0]][wum_pos[1]][2] = 0
+        self.maze[wum_pos[0]][wum_pos[1]][5] = 1
+        a_room = self.agent.adj(wum_pos)
+        for room in a_room:
+            n_room = self.agent.adj(room)
+            check_s = 0
+            for ad_n_room in n_room:
+                if self.maze[ad_n_room[0]][ad_n_room[1]][2] == 1:
+                    check_s += 1
+            if check_s == 0:
+                stench_pos = [t[1] for t in self.s]
+                i = stench_pos.index((room[0], room[1]))
+                del_s = self.s[i][0]
+                self.frame_maze.delete(del_s)
+                self.s.pop(i)
+                self.maze[room[0]][room[1]][3] = 0
+
+        self.frame_maze.pack()
+        
+    def spe_move(self, sign, pos):
+        if sign == 'd':
+            self.frame_maze.destroy()
+            self.end_dlg()
+        elif sign == 'g':
+            tup_pos = [t[1] for t in self.g]
+            i = tup_pos.index((self.agent.a_pos[0], self.agent.a_pos[1]))
+            del_food = self.g[i][0]
+            self.frame_maze.delete(del_food)
+        elif sign == 'c':
+            self.frame_maze.destroy()
+            self.end_dlg()
+        elif sign == 'm':
+            self.move(pos, self.agent.a_pos)
+        elif sign == 's': #shoot
+            self.shoot(pos)
+
+    def end_dlg(self):
+        g.draw_map.destroy()
+        messagebox.showerror(title = 'ENDGAME', message = 'hehe')
