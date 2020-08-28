@@ -72,7 +72,7 @@ class Wumpus_game(Frame):
             elif self.maze[p[0]][p[1]][1] != 0:
                 st_kb = 'B[{i}][{j}] -> ('.format(i = self.m_size-p[0], j= p[0] + 1)
                 for room in adj_r:
-                    if self.maze[room[0]][room[1]][5] == 0 or self.maze[room[0]][room[1]][2] == 0 :
+                    if self.maze[room[0]][room[1]][5] == 0 and self.maze[room[0]][room[1]][2] == 0 :
                         self.maze[room[0]][room[1]][0] +=1
                     elif self.maze[room[0]][room[1]][5] == 0 and self.maze[room[0]][room[1]][2] != 0:
                         self.maze[room[0]][room[1]][2] = 0
@@ -92,10 +92,11 @@ class Wumpus_game(Frame):
             elif self.maze[p[0]][p[1]][3] != 0:
                 st_kb = 'S[{i}][{j}] -> ('.format(i = self.m_size-p[0], j= p[0] + 1)
                 for room in adj_r:
-                    if self.maze[room[0]][room[1]][5] == 0 or self.maze[room[0]][room[1]][0] == 0 :
+                    if self.maze[room[0]][room[1]][5] == 0 and self.maze[room[0]][room[1]][0] == 0 :
                         self.maze[room[0]][room[1]][2] +=1
-                    elif self.maze[room[0]][room[1]][0] != 0:
+                    elif self.maze[room[0]][room[1]][0] != 0 and self.maze[room[0]][room[1]][5] == 0 :
                         self.maze[room[0]][room[1]][0] = 0
+                        self.maze[room[0]][room[1]][5] = 1
                         self.KB.append('-P[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                         if self.maze[room[0]][room[1]][2] != 0:
                             self.maze[room[0]][room[1]][2] += 1
