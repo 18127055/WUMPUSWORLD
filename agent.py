@@ -6,6 +6,7 @@ from random import randint
 from copy import deepcopy
 from tkinter import messagebox
 import time
+import tkinter.font as tkFont
 
 block_size = 55
 
@@ -176,7 +177,8 @@ class Wumpus_game(Frame):
                 self.KB.append('G[{i}][{j}] -> Grab[{i}][{j}]'.format(i = self.m_size - self.a_pos[0], j = self.a_pos[1]+1))
                 sign = self.grab(self.a_pos)
                 print(self.KB)
-                self.moveable.append(self.path[0])
+                if self.maze[self.path[0][0]][self.path[0][1]][6] == 0:
+                    self.moveable.append(self.path[0])
                 self.path.pop(0)
                 return sign, 0
             #shoot
@@ -186,7 +188,8 @@ class Wumpus_game(Frame):
                     self.KB.append('W[{i}][{j}] -> Shoot[{i}][{j}]'.format(i = self.m_size - room[0], j = room[1]+1))
                     sign = self.shoot(room)
                     print(self.KB)
-                    self.moveable.append(self.path[0])
+                    if self.maze[self.path[0][0]][self.path[0][1]][6] == 0:
+                        self.moveable.append(self.path[0])
                     self.path.pop(0)
                     return sign, room
             #climb
@@ -409,7 +412,7 @@ class Wumpus_game(Frame):
             return 'r'
         elif cur[0] > n_pos[0]:
             return 'u'
-        elif cur[0] > n_pos[0]:
+        elif cur[0] < n_pos[0]:
             return 'd'
     
     def move(self, cur, n_pos):
@@ -529,7 +532,7 @@ class Wumpus_game(Frame):
     def spe_move(self, sign, pos):
         if sign == 'd':
             self.frame_maze.destroy()
-            self.end_dlg()
+            g.end_dlg('d')
         elif sign == 'g':
             tup_pos = [t[1] for t in self.g]
             i = tup_pos.index((self.agent.a_pos[0], self.agent.a_pos[1]))
@@ -539,12 +542,8 @@ class Wumpus_game(Frame):
             self.maze[self.agent.a_pos[0]][self.agent.a_pos[1]][4]=0
         elif sign == 'c':
             self.frame_maze.destroy()
-            self.end_dlg()
+            g.end_dlg('c')
         elif sign == 'm':
             self.move(pos, self.agent.a_pos)
         elif sign == 's': #shoot
             self.shoot(pos)
-
-    def end_dlg(self):
-        g.draw_map.destroy()
-        messagebox.showerror(title = 'ENDGAME', message = 'hehe')
