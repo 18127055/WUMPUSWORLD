@@ -24,7 +24,7 @@ class Wumpus_game(Frame):
             self.KB = [] #in menh de cho vi tri hien tai agent dang dung
             #P, B, W, S, G, OK, V
             self.maze = [[[0,0,0,0,0,0,0] for _ in range(size)] for _ in range(size)]
-            self.a_pos = pos[randint(0,len(pos)-1)]
+            self.a_pos = (6,5)#pos[randint(0,len(pos)-1)]
             self.cave = self.a_pos
             self.maze[self.a_pos[0]][self.a_pos[1]] = [0,0,0,0,0,1,0]
             self.frame = frame_maze
@@ -76,7 +76,7 @@ class Wumpus_game(Frame):
                         self.maze[room[0]][room[1]][0] +=1
                     elif self.maze[room[0]][room[1]][5] == 0 and self.maze[room[0]][room[1]][2] != 0:
                         self.maze[room[0]][room[1]][2] = 0
-                        self.maze[room[0]][room[1]][5] = 1
+                        #self.maze[room[0]][room[1]][5] = 1
                         self.KB.append('-W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                         if self.maze[room[0]][room[1]][0] != 0:
                             self.maze[room[0]][room[1]][0] += 1
@@ -96,7 +96,7 @@ class Wumpus_game(Frame):
                         self.maze[room[0]][room[1]][2] +=1
                     elif self.maze[room[0]][room[1]][0] != 0 and self.maze[room[0]][room[1]][5] == 0 :
                         self.maze[room[0]][room[1]][0] = 0
-                        self.maze[room[0]][room[1]][5] = 1
+                        #self.maze[room[0]][room[1]][5] = 1
                         self.KB.append('-P[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                         if self.maze[room[0]][room[1]][2] != 0:
                             self.maze[room[0]][room[1]][2] += 1
@@ -109,14 +109,14 @@ class Wumpus_game(Frame):
                     st_kb += 'W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1)
                 self.KB.append(st_kb)
             #empty
-            st_kb = 'OK[{i}][{j}] -> ('.format(i = self.m_size-p[0], j= p[0] + 1)
+            st_kb = 'OK[{i}][{j}] -> ('.format(i = self.m_size-p[0], j= p[1] + 1)
             if self.maze[p[0]][p[1]][3] == 0 and self.maze[p[0]][p[1]][1] == 0 and self.maze[p[0]][p[1]][0] == 0 and self.maze[p[0]][p[1]][2] == 0:
                 for room in adj_r:
                     self.maze[room[0]][room[1]][5] = 1
-                    if self.maze[room[0]][room[1]][0] == 1:
+                    if self.maze[room[0]][room[1]][0] != 0:
                         self.maze[room[0]][room[1]][0] = 0
                         self.KB.append('-P[{i}][{j}]'.format(i = self.m_size - room[0], j= room[1]+1))
-                    if self.maze[room[0]][room[1]][2] == 1:
+                    if self.maze[room[0]][room[1]][2] != 0:
                         self.maze[room[0]][room[1]][2] = 0
                         self.KB.append('-W[{i}][{j}]'.format(i = self.m_size - room[0], j= room[1]+1))
                     if self.maze[room[0]][room[1]][6] == 0 and room not in self.moveable:
@@ -169,25 +169,29 @@ class Wumpus_game(Frame):
             #shoot, move, grab, climb, die
             #die
             if self.maze[self.a_pos[0]][self.a_pos[1]][0] != 0 or self.maze[self.a_pos[0]][self.a_pos[1]][2] != 0:
-                #print(self.KB)
+                print(self.KB)
                 return 'd', 0
             #grab
             if self.maze[self.a_pos[0]][self.a_pos[1]][4] == 1:
-                self.KB.append('G[{i}][{j}] -> Grab[{i}][{j}]'.format(i = self.size - self.a_pos[0], j = self.a_pos[1]+1))
+                self.KB.append('G[{i}][{j}] -> Grab[{i}][{j}]'.format(i = self.m_size - self.a_pos[0], j = self.a_pos[1]+1))
                 sign = self.grab(self.a_pos)
-                #print(self.KB)
+                print(self.KB)
+                self.moveable.append(self.path[0])
+                self.path.pop(0)
                 return sign, 0
             #shoot
             adj_r = self.adj(self.a_pos)
             for room in adj_r:
                 if self.maze[room[0]][room[1]][2] == 2:
-                    self.KB.append('W[{i}][{j}] -> Shoot[{i}][{j}]'.format(i = self.size - room[0], j = room[1]+1))
+                    self.KB.append('W[{i}][{j}] -> Shoot[{i}][{j}]'.format(i = self.m_size - room[0], j = room[1]+1))
                     sign = self.shoot(room)
-                    #print(self.KB)
+                    print(self.KB)
+                    self.moveable.append(self.path[0])
+                    self.path.pop(0)
                     return sign, room
             #climb
             if len(self.moveable) == 0 and self.a_pos == self.cave:
-                #print(self.KB)
+                print(self.KB)
                 return 'c', 0
             #move
             temp = self.a_pos            
@@ -195,7 +199,7 @@ class Wumpus_game(Frame):
             self.maze[self.a_pos[0]][self.a_pos[1]][6] = 1
             self.KB.append('MoveTo[{i}][{j}] -> V[{i}][{j}]'.format(i= self.m_size - self.a_pos[0], j= self.a_pos[1]+1))
             self.path.pop(0)
-            #print(self.KB)
+            print(self.KB)
             return 'm', temp 
 
         def play(self, maze):
@@ -351,14 +355,14 @@ class Wumpus_game(Frame):
         self.frame_maze.image.append(left_img)
         self.imgdict["Left"] = left_img
 
-        up_img = Image.open(r'../WUMPUSWORLD/Image/forward.png')
+        up_img = Image.open(r'../WUMPUSWORLD/Image/backward.png')
         up_img = up_img.resize(
                         (block_size, block_size), Image.ANTIALIAS)
         up_img = ImageTk.PhotoImage(up_img)
         self.frame_maze.image.append(up_img)
         self.imgdict["Up"] = up_img
 
-        down_img = Image.open(r'../WUMPUSWORLD/Image/backward.png')
+        down_img = Image.open(r'../WUMPUSWORLD/Image/forward.png')
         down_img = down_img.resize(
                         (block_size, block_size), Image.ANTIALIAS)
         down_img = ImageTk.PhotoImage(down_img)
@@ -370,6 +374,7 @@ class Wumpus_game(Frame):
         while sign not in ['c','d']:
             sign, r = self.agent.play(deepcopy(self.maze))
             self.spe_move(sign, r)
+            self.agent.KB = []
             time.sleep(0.5)
         
     def readFile(self):
@@ -412,39 +417,47 @@ class Wumpus_game(Frame):
         if dir == 'l':
             self.frame_maze.delete(self.a_img)
             self.a_img = self.frame_maze.create_image(cur[1]*block_size, cur[0]*block_size, anchor = NW, image = self.imgdict["Left"])
-            self.frame_maze.update()
             self.frame_maze.after(50)
+            self.frame_maze.update()
             self.frame_maze.delete(self.a_img)
             self.frame_maze.delete(self.brick[n_pos[0]][n_pos[1]])
             self.brick[n_pos[0]][n_pos[1]] = None
             self.a_img = self.frame_maze.create_image(n_pos[1]*block_size, n_pos[0]*block_size, anchor = NW, image = self.imgdict["Left"])
+            self.frame_maze.after(50)
+            self.frame_maze.update()
         elif dir == 'r':
             self.frame_maze.delete(self.a_img)
             self.a_img = self.frame_maze.create_image(cur[1]*block_size, cur[0]*block_size, anchor = NW, image = self.imgdict["Right"])
-            self.frame_maze.update()
             self.frame_maze.after(50)
+            self.frame_maze.update()
             self.frame_maze.delete(self.a_img)
             self.frame_maze.delete(self.brick[n_pos[0]][n_pos[1]])
             self.brick[n_pos[0]][n_pos[1]] = None
             self.a_img = self.frame_maze.create_image(n_pos[1]*block_size, n_pos[0]*block_size, anchor = NW, image = self.imgdict["Right"])
+            self.frame_maze.after(50)
+            self.frame_maze.update()
         elif dir == 'u':
             self.frame_maze.delete(self.a_img)
             self.a_img = self.frame_maze.create_image(cur[1]*block_size, cur[0]*block_size, anchor = NW, image = self.imgdict["Up"])
-            self.frame_maze.update()
             self.frame_maze.after(50)
+            self.frame_maze.update()
             self.frame_maze.delete(self.a_img)
             self.frame_maze.delete(self.brick[n_pos[0]][n_pos[1]])
             self.brick[n_pos[0]][n_pos[1]] = None
             self.a_img = self.frame_maze.create_image(n_pos[1]*block_size, n_pos[0]*block_size, anchor = NW, image = self.imgdict["Up"])
+            self.frame_maze.after(50)
+            self.frame_maze.update()
         elif dir == 'd':
             self.frame_maze.delete(self.a_img)
             self.a_img = self.frame_maze.create_image(cur[1]*block_size, cur[0]*block_size, anchor = NW, image = self.imgdict["Down"])
-            self.frame_maze.update()
             self.frame_maze.after(50)
+            self.frame_maze.update()
             self.frame_maze.delete(self.a_img)
             self.frame_maze.delete(self.brick[n_pos[0]][n_pos[1]])
             self.brick[n_pos[0]][n_pos[1]] = None
             self.a_img = self.frame_maze.create_image(n_pos[1]*block_size, n_pos[0]*block_size, anchor = NW, image = self.imgdict["Down"])
+            self.frame_maze.after(50)
+            self.frame_maze.update()
         
         self.maze[n_pos[0]][n_pos[1]][5] = 1
         self.maze[n_pos[0]][n_pos[1]][6] = 1
@@ -522,6 +535,8 @@ class Wumpus_game(Frame):
             i = tup_pos.index((self.agent.a_pos[0], self.agent.a_pos[1]))
             del_food = self.g[i][0]
             self.frame_maze.delete(del_food)
+            time.sleep(0.5)
+            self.maze[self.agent.a_pos[0]][self.agent.a_pos[1]][4]=0
         elif sign == 'c':
             self.frame_maze.destroy()
             self.end_dlg()
