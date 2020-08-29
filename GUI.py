@@ -154,6 +154,9 @@ def back_menu_c():
 def close_program():
     end_frame.destroy()
 
+def close_program_c():
+    congra_frame.destroy()
+
 def end_dlg(s):
     draw_map.destroy()
     if s == 'd':
@@ -163,13 +166,19 @@ def end_dlg(s):
         end_frame.resizable(width=False, height=False)
         end_frame.title('GAME OPTION')
 
-        end_game = Canvas(end_frame, width=300, height=300, bg='indigo')
+        end_game = Canvas(end_frame, width=300, height=300, bg='grey')
 
         # resize font
-        fontStyleNoti = tkFont.Font(family="Lucida Grande", size=28)
-        Label_noti = Label(end_frame, text='GAME OVER', width=10,
-                        height=4, bg='indigo', fg='lavender', font=fontStyleNoti)
-        Label_noti.place(x=35, y=60)
+        # fontStyleNoti = tkFont.Font(family="Lucida Grande", size=28)
+        # Label_noti = Label(end_frame, text='GAME OVER', width=10,
+        #                 height=4, bg='indigo', fg='lavender', font=fontStyleNoti)
+        # Label_noti.place(x=35, y=60)
+
+        go_img = Image.open(r'../WUMPUSWORLD/Image/go.png')
+        go_img = ImageTk.PhotoImage(go_img.resize((240,180), Image.ANTIALIAS))
+
+        end_game.create_image(37, 40, anchor = NW, image = go_img)
+        end_game.image =[go_img]
 
         # Buttons
         quit_btn = Button(end_game, text="QUIT", command=close_program)
@@ -193,16 +202,31 @@ def end_dlg(s):
         end_game = Canvas(congra_frame, width=300, height=300, bg='black')
 
         # resize font
-        fontStyleNoti = tkFont.Font(family="Lucida Grande", size=20) 
-        Label_noti = Label(end_frame, text='CONGRATUATIONS', width=20, height=4, bg='mint cream', fg='light coral', font=fontStyleNoti) 
-        Label_noti.place(x=0, y=60)
+        end_game = Canvas(congra_frame, width=300, height=300, bg='mint cream')
+        fontStyleNoti = tkFont.Font(family="Lucida Grande", size=18) 
+        Label_noti = Label(end_frame, text='CONGRATUATIONS', width=16, height=0, bg='mint cream', fg='light coral', font=fontStyleNoti) 
+        Label_noti.place(x=14, y=100)
 
-        # Label_score = Label(congra_frame, text=self.score, width=20,
-        #                     height=4, fg='#00ffff', bg='black', font=fontStyleScore)
-        # Label_score.place(relx=0.5, rely=0.5, anchor='center')
+        congra_img = Image.open(r'../WUMPUSWORLD/Image/congra.png')
+        congra_img = ImageTk.PhotoImage(congra_img.resize((40,40), Image.ANTIALIAS))
+        end_game.create_image(100,140, anchor = NW, image = congra_img)
+        end_game.create_image(160,140, anchor = NW, image = congra_img)
+        end_game.image = [congra_img]
+
+        pac_img = Image.open(r'../WUMPUSWORLD/Image/pac.png')
+        pac_img = ImageTk.PhotoImage(pac_img.resize((40,40), Image.ANTIALIAS))
+        end_game.create_image(250,90, anchor = NW, image = pac_img)
+        end_game.image.append(pac_img)
+
+        star_img = Image.open(r'../WUMPUSWORLD/Image/star.png')
+        star_img = ImageTk.PhotoImage(star_img.resize((40,40), Image.ANTIALIAS))
+        end_game.create_image(70,140, anchor = NW, image = star_img)
+        end_game.create_image(130,140, anchor = NW, image = star_img)
+        end_game.create_image(190,140, anchor = NW, image = star_img)
+        end_game.image.append(star_img)
 
         # Buttons
-        quit_btn = Button(end_game, text="QUIT", command=close_program)
+        quit_btn = Button(end_game, text="QUIT", command=close_program_c)
         quit_btn.pack(padx=50, pady=20)
         quit_btn.place(x=40, y=260)
 

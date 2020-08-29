@@ -25,7 +25,7 @@ class Wumpus_game(Frame):
             self.KB = [] #in menh de cho vi tri hien tai agent dang dung
             #P, B, W, S, G, OK, V
             self.maze = [[[0,0,0,0,0,0,0] for _ in range(size)] for _ in range(size)]
-            self.a_pos = (6,5)#pos[randint(0,len(pos)-1)]
+            self.a_pos = pos[randint(0,len(pos)-1)]
             self.cave = self.a_pos
             self.maze[self.a_pos[0]][self.a_pos[1]] = [0,0,0,0,0,1,0]
             self.frame = frame_maze
@@ -214,7 +214,7 @@ class Wumpus_game(Frame):
     def __init__(self, path_file, master=None):
         super().__init__(master)
         self.filename = "../WUMPUSWORLD/Map/" + path_file
-        self.arrow, self.score, self.gold = 0, 10000, 5
+        self.arrow, self.score, self.gold = 0, 0, 0
         self.w_pos, self.maze = [], []
         self.s, self.g, self.brick, self.w = [], [], [], []
         self.readFile()
@@ -288,6 +288,7 @@ class Wumpus_game(Frame):
                     self.s.append([self.frame_maze.create_image(c*block_size+10, r*block_size-2, anchor = NW, image = stench_img), (r,c)])
                 if self.maze[r][c][4] == 1:
                     self.g.append([self.frame_maze.create_image(c*block_size+20, r*block_size+5, anchor = NW, image = gold_img), (r,c)])
+                    self.gold +=1
 
         self.frame_maze.image.append(gold_img)
         self.frame_maze.image.append(breeze_img)
@@ -546,4 +547,5 @@ class Wumpus_game(Frame):
         elif sign == 'm':
             self.move(pos, self.agent.a_pos)
         elif sign == 's': #shoot
+            self.arrow +=1
             self.shoot(pos)
