@@ -230,7 +230,7 @@ class Wumpus_game(Frame):
 
     def __init__(self, path_file, master=None):
         super().__init__(master)
-        self.filename = "../WUMPUSWORLD/Map/" + path_file
+        self.filename = path_file
         self.arrow, self.score, self.gold = 0, 0, 0
         self.w_pos, self.maze = [], []
         self.s, self.g, self.brick, self.w = [], [], [], []

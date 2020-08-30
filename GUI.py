@@ -2,6 +2,7 @@ from tkinter import *
 from PIL import Image, ImageTk
 from agent import *
 import tkinter.font as tkFont
+from tkinter import filedialog
 
 def clear_entry(event, entry):
     entry.delete(0, END)
@@ -20,6 +21,20 @@ def myClick(event = NONE):
     game.Play()
     draw_map.mainloop()
 
+def startGame():
+    path_file = filedialog.askopenfilename(initialdir = "/", title = "Select a file", filetypes = (("Text files", "*.txt*"), ("All files", "*.*"))) 
+    ini_frame.destroy()
+    global draw_map
+    draw_map = Tk()
+    w, h = (draw_map.winfo_screenwidth()-10 *
+            block_size)//2, (draw_map.winfo_screenheight()-10*block_size)//2
+    draw_map.geometry('+'+str(w)+'+'+str(h-60))
+    draw_map.resizable(width=False, height=False)
+    draw_map.title('GAME')
+    game = Wumpus_game(path_file,draw_map)
+    game.Play()
+    draw_map.mainloop()
+    
 def menu():
     global ini_frame
     ini_frame = Tk()
@@ -50,7 +65,7 @@ def menu():
     #create open button
     button_img = Image.open(r'../WUMPUSWORLD/Image/video-player.png')
     button_img = ImageTk.PhotoImage(button_img.resize((35, 35), Image.ANTIALIAS))
-    lv2_btn = Button(ini_frame, text="LEVEL 2", command = myClick, borderwidth=0)
+    lv2_btn = Button(ini_frame, text="LEVEL 2", command = startGame, borderwidth=0)
     lv2_btn.pack(padx=50, pady=20)
     lv2_btn.place(x = 550, y = 337)
     lv2_btn.config(height = 35, width = 35, activebackground='black', image=button_img)
