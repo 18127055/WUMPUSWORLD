@@ -162,7 +162,8 @@ class Wumpus_game(Frame):
 
         def shoot(self, pos):
             self.maze[pos[0]][pos[1]][2] = 0
-            self.maze[pos[0]][pos[1]][5] = 1
+            if self.maze[pos[0]][pos[1]][0] == 0:
+                self.maze[pos[0]][pos[1]][5] = 1
             n_room = self.adj(pos)
             self.moveable.append(pos)
             for room in n_room:
@@ -202,6 +203,7 @@ class Wumpus_game(Frame):
                 if self.maze[room[0]][room[1]][2] >= 2:
                     self.KB.append('W[{i}][{j}] -> Shoot[{i}][{j}]'.format(i = self.m_size - room[0], j = room[1]+1))
                     sign = self.shoot(room)
+                    self.maze[room[0]][room[1]][2] = 0
                     print(self.KB)
                     if self.maze[self.path[0][0]][self.path[0][1]][6] == 0:
                         self.moveable.append(self.path[0])
@@ -415,7 +417,7 @@ class Wumpus_game(Frame):
             sign, r = self.agent.play(deepcopy(self.maze))
             self.spe_move(sign, r)
             self.agent.KB = []
-            time.sleep(0.5)
+            time.sleep(0.2)
         
     def readFile(self):
         with open(self.filename) as f:
@@ -505,6 +507,8 @@ class Wumpus_game(Frame):
 
     def shoot(self, wum_pos):
         dir = self.direction(self.agent.a_pos, wum_pos)
+        if self.maze[wum_pos[0]][wum_pos[1]][2]==0:
+            return
         if dir == 'l':
             tup_pos = [t[1] for t in self.w]
             i = tup_pos.index((wum_pos[0], wum_pos[1]))
@@ -596,7 +600,7 @@ class Wumpus_game(Frame):
         r_score.update()
         r_arrow.config(text = self.arrow)
         r_arrow.update()
-
+    
     def d_score(self):
         self.score -=10000
         r_score.config(text = self.score)
@@ -604,8 +608,9 @@ class Wumpus_game(Frame):
 
     def spe_move(self, sign, pos):
         if sign == 'd':
-            self.frame_maze.destroy()
             self.d_score()
+            self.frame_maze.destroy()
+            self.frame_maze.update()
             g.end_dlg('d')
         elif sign == 'g':
             tup_pos = [t[1] for t in self.g]
@@ -613,11 +618,11 @@ class Wumpus_game(Frame):
             del_food = self.g[i][0]
             self.frame_maze.delete(del_food)
             self.g_score()
-            #time.sleep(0.5)
+            time.sleep(0.1)
             self.maze[self.agent.a_pos[0]][self.agent.a_pos[1]][4]=0
         elif sign == 'c':
-            self.frame_maze.destroy()
             self.c_score()
+            self.frame_maze.destroy()
             g.end_dlg('c')
         elif sign == 'm':
             self.move(pos, self.agent.a_pos)
