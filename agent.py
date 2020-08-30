@@ -7,6 +7,7 @@ from copy import deepcopy
 from tkinter import messagebox
 import time
 import tkinter.font as tkFont
+from BFS import A_star
 
 block_size = 55
 
@@ -135,22 +136,24 @@ class Wumpus_game(Frame):
         def agent_path(self):
             adj_r = self.adj()
             step = self.checkIfBSO(adj_r)
-            self.path = []
-            if len(self.moveable) == 0:
-                dist_cave = [manhattan(self.cave,st) for st in step]
-                self.path.append(step[dist_cave.index(min(dist_cave))])
+            #self.path = []
+            if len(self.moveable) == 0: #climb
+                #dist_cave = [manhattan(self.cave,st) for st in step]
+                #self.path.append(step[dist_cave.index(min(dist_cave))])
+                self.path = A_star(self.maze,self.cave,self.a_pos)
             else:
                 for i in step:
                     if i in self.moveable:
-                        self.path.append(i)
+                        self.path= [i]
                         self.moveable.pop(self.moveable.index(i))
                         break
                     self.path = []
                 if len(self.path) == 0:
                     dist_a_emp = [manhattan(self.a_pos,move) for move in self.moveable]
                     move_min = self.moveable[dist_a_emp.index(min(dist_a_emp))]
-                    dist_m_step = [manhattan(st,move_min) for st in step]
-                    self.path.append(step[dist_m_step.index(min(dist_m_step))])
+                    #dist_m_step = [manhattan(st,move_min) for st in step]
+                    #self.path.append(step[dist_m_step.index(min(dist_m_step))])
+                    self.path = A_star(self.maze,move_min, self.a_pos)
         
         def getPercept(self, maze):
             for i in range(7):
@@ -160,6 +163,18 @@ class Wumpus_game(Frame):
         def shoot(self, pos):
             self.maze[pos[0]][pos[1]][2] = 0
             self.maze[pos[0]][pos[1]][5] = 1
+            n_room = self.adj(pos)
+            self.moveable.append(pos)
+            for room in n_room:
+                if self.maze[room[0]][room[1]][3] == 1:
+                    self.maze[room[0]][room[1]][2] = 0
+                    w_r = self.adj(room)
+                    self.maze[room[0]][room[1]][3] = 0
+                    for r in w_r:
+                        if self.maze[r[0]][r[1]][2] == 1:
+                            self.maze[r[0]][r[1]][2] = 0
+                        elif self.maze[r[0]][r[1]][2] == 2:
+                            self.maze[r[0]][r[1]][3] = 1
             return 's'
         
         def grab(self, pos):
@@ -169,7 +184,7 @@ class Wumpus_game(Frame):
         def action(self): #do 1 action at a time
             #shoot, move, grab, climb, die
             #die
-            if self.maze[self.a_pos[0]][self.a_pos[1]][0] != 0 or self.maze[self.a_pos[0]][self.a_pos[1]][2] != 0:
+            if self.maze[self.a_pos[0]][self.a_pos[1]][0] == 2 or self.maze[self.a_pos[0]][self.a_pos[1]][2] == 2:
                 print(self.KB)
                 return 'd', 0
             #grab
@@ -184,7 +199,7 @@ class Wumpus_game(Frame):
             #shoot
             adj_r = self.adj(self.a_pos)
             for room in adj_r:
-                if self.maze[room[0]][room[1]][2] == 2:
+                if self.maze[room[0]][room[1]][2] >= 2:
                     self.KB.append('W[{i}][{j}] -> Shoot[{i}][{j}]'.format(i = self.m_size - room[0], j = room[1]+1))
                     sign = self.shoot(room)
                     print(self.KB)
@@ -316,8 +331,13 @@ class Wumpus_game(Frame):
         self.frame_maze.create_image(15, 55*self.size + 10, anchor = NW, image = score_img)
         self.frame_maze.image.append(score_img)
 
-        self.frame_maze.create_text(70,55*self.size + 25,fill = "navajo white", font="purisa 10", text = "Score: " )
-        self.frame_maze.create_text(120,55*self.size + 25,fill = "#E6E6FA", font="purisa 10", text = self.score )
+        # self.frame_maze.create_text(70,55*self.size + 25,fill = "navajo white", font="purisa 10", text = "Score: " )
+        # self.frame_maze.create_text(120,55*self.size + 25,fill = "#E6E6FA", font="purisa 10", text = self.score )
+        Label_score = Label(self.frame_maze, text='Score: ',bg = 'black', fg='navajo white', font = 'purisa 10') 
+        Label_score.place(x=60, y=55*self.size+15)
+        global r_score
+        r_score = Label(self.frame_maze, text= self.score ,fg='#E6E6FA', bg = 'black', font = 'purisa 10') 
+        r_score.place(x=110, y=55*self.size+15)
 
         #draw used arrows
         arrow_img = Image.open(r'../WUMPUSWORLD/Image/arrow.png')
@@ -326,8 +346,13 @@ class Wumpus_game(Frame):
         self.frame_maze.create_image(410, 55*self.size + 10, anchor = NW, image = arrow_img)
         self.frame_maze.image.append(arrow_img)
 
-        self.frame_maze.create_text(485,55*self.size + 25,fill = "navajo white", font="purisa 10", text = "Used Arrows: " )
-        self.frame_maze.create_text(535,55*self.size + 25,fill = "#E6E6FA", font="purisa 10", text = self.arrow)
+        # self.frame_maze.create_text(485,55*self.size + 25,fill = "navajo white", font="purisa 10", text = "Used Arrows: " )
+        # self.frame_maze.create_text(535,55*self.size + 25,fill = "#E6E6FA", font="purisa 10", text = self.arrow)
+        Label_arrow = Label(self.frame_maze, text='Used Arrows: ',bg = 'black', fg='navajo white', font = 'purisa 10') 
+        Label_arrow.place(x=445, y=55*self.size+14)
+        global r_arrow
+        r_arrow = Label(self.frame_maze, text= self.arrow ,fg='#E6E6FA', bg = 'black', font = 'purisa 10') 
+        r_arrow.place(x=530, y=55*self.size+14)
 
         #draw golds
         gold_img = Image.open(r'../WUMPUSWORLD/Image/gold.png')
@@ -336,15 +361,26 @@ class Wumpus_game(Frame):
         self.frame_maze.create_image(190, 55*self.size + 10, anchor = NW, image = gold_img)
         self.frame_maze.image.append(gold_img)
 
-        self.frame_maze.create_text(280,55*self.size + 25,fill = "navajo white", font="purisa 10", text = "Remaining Golds: " )
-        self.frame_maze.create_text(340,55*self.size + 25,fill = "#E6E6FA", font="purisa 10", text = self.gold)
-    
+        # self.frame_maze.create_text(280,55*self.size + 25,fill = "navajo white", font="purisa 10", text = "Remaining Golds: " )
+        # self.frame_maze.create_text(340,55*self.size + 25,fill = "#E6E6FA", font="purisa 10", text = self.gold)
+        Label_gold = Label(self.frame_maze, text='Remainning Golds: ',bg = 'black', fg='navajo white', font = 'purisa 10') 
+        Label_gold.place(x=220, y=55*self.size+14)
+        global r_gold
+        r_gold = Label(self.frame_maze, text= self.gold ,fg='#E6E6FA', bg = 'black', font = 'purisa 10') 
+        r_gold.place(x=340, y=55*self.size+14)
+
         #agent_img
         agent_img = Image.open(r'../WUMPUSWORLD/Image/right.png')
         agent_img = agent_img.resize(
                         (block_size, block_size), Image.ANTIALIAS)
         agent_img = ImageTk.PhotoImage(agent_img)
         self.imgdict["Right"] = agent_img
+
+        cave_img = Image.open(r'../WUMPUSWORLD/Image/cave.png')
+        cave_img = ImageTk.PhotoImage(cave_img.resize((55,55), Image.ANTIALIAS))
+
+        self.frame_maze.create_image(self.agent.a_pos[1]*block_size, self.agent.a_pos[0]*block_size, anchor=NW, image=cave_img)
+        self.frame_maze.image.append(cave_img)
 
         self.frame_maze.delete(self.brick[self.agent.a_pos[0]][self.agent.a_pos[1]])
         self.brick[self.agent.a_pos[0]][self.agent.a_pos[1]] = None
@@ -476,8 +512,9 @@ class Wumpus_game(Frame):
 
             self.frame_maze.delete(self.a_img)
             self.frame_maze.delete(del_w)
-            self.a_img = self.frame_maze.create_image(self.agent.a_pos[0]*block_size, self.agent.a_pos[1]*block_size, anchor = NW, image = self.imgdict["Left"])
+            self.a_img = self.frame_maze.create_image(self.agent.a_pos[1]*block_size, self.agent.a_pos[0]*block_size, anchor = NW, image = self.imgdict["Left"])
             self.frame_maze.delete(self.brick[wum_pos[0]][wum_pos[1]])
+            self.frame_maze.update()
             self.brick[wum_pos[0]][wum_pos[1]] = None
 
         elif dir == 'r':
@@ -487,8 +524,9 @@ class Wumpus_game(Frame):
 
             self.frame_maze.delete(self.a_img)
             self.frame_maze.delete(del_w)
-            self.a_img = self.frame_maze.create_image(self.agent.a_pos[0]*block_size, self.agent.a_pos[1]*block_size, anchor = NW, image = self.imgdict["Right"])
+            self.a_img = self.frame_maze.create_image(self.agent.a_pos[1]*block_size, self.agent.a_pos[0]*block_size, anchor = NW, image = self.imgdict["Right"])
             self.frame_maze.delete(self.brick[wum_pos[0]][wum_pos[1]])
+            self.frame_maze.update()
             self.brick[wum_pos[0]][wum_pos[1]] = None
         elif dir == 'u':
             tup_pos = [t[1] for t in self.w]
@@ -497,8 +535,9 @@ class Wumpus_game(Frame):
 
             self.frame_maze.delete(self.a_img)
             self.frame_maze.delete(del_w)
-            self.a_img = self.frame_maze.create_image(self.agent.a_pos[0]*block_size, self.agent.a_pos[1]*block_size, anchor = NW, image = self.imgdict["Up"])
+            self.a_img = self.frame_maze.create_image(self.agent.a_pos[1]*block_size, self.agent.a_pos[0]*block_size, anchor = NW, image = self.imgdict["Up"])
             self.frame_maze.delete(self.brick[wum_pos[0]][wum_pos[1]])
+            self.frame_maze.update()
             self.brick[wum_pos[0]][wum_pos[1]] = None
         elif dir == 'd':
             tup_pos = [t[1] for t in self.w]
@@ -507,8 +546,9 @@ class Wumpus_game(Frame):
 
             self.frame_maze.delete(self.a_img)
             self.frame_maze.delete(del_w)
-            self.a_img = self.frame_maze.create_image(self.agent.a_pos[0]*block_size, self.agent.a_pos[1]*block_size, anchor = NW, image = self.imgdict["Down"])
+            self.a_img = self.frame_maze.create_image(self.agent.a_pos[1]*block_size, self.agent.a_pos[0]*block_size, anchor = NW, image = self.imgdict["Down"])
             self.frame_maze.delete(self.brick[wum_pos[0]][wum_pos[1]])
+            self.frame_maze.update()
             self.brick[wum_pos[0]][wum_pos[1]] = None
 
         self.maze[wum_pos[0]][wum_pos[1]][2] = 0
@@ -525,27 +565,63 @@ class Wumpus_game(Frame):
                 i = stench_pos.index((room[0], room[1]))
                 del_s = self.s[i][0]
                 self.frame_maze.delete(del_s)
+                self.frame_maze.update()
                 self.s.pop(i)
                 self.maze[room[0]][room[1]][3] = 0
 
         self.frame_maze.pack()
-        
+    
+    def g_score(self):
+        self.gold -= 1
+        self.score +=100
+        r_score.config(text = self.score)
+        r_score.update()
+        r_gold.config(text = self.gold)
+        r_gold.update()
+    
+    def m_score(self):
+        self.score -=10
+        r_score.config(text = self.score)
+        r_score.update()
+
+    def c_score(self):
+        self.score +=10
+        r_score.config(text = self.score)
+        r_score.update()
+
+    def s_score(self):
+        self.score -=100
+        self.arrow +=1
+        r_score.config(text = self.score)
+        r_score.update()
+        r_arrow.config(text = self.arrow)
+        r_arrow.update()
+
+    def d_score(self):
+        self.score -=10000
+        r_score.config(text = self.score)
+        r_score.update()
+
     def spe_move(self, sign, pos):
         if sign == 'd':
             self.frame_maze.destroy()
+            self.d_score()
             g.end_dlg('d')
         elif sign == 'g':
             tup_pos = [t[1] for t in self.g]
             i = tup_pos.index((self.agent.a_pos[0], self.agent.a_pos[1]))
             del_food = self.g[i][0]
             self.frame_maze.delete(del_food)
-            time.sleep(0.5)
+            self.g_score()
+            #time.sleep(0.5)
             self.maze[self.agent.a_pos[0]][self.agent.a_pos[1]][4]=0
         elif sign == 'c':
             self.frame_maze.destroy()
+            self.c_score()
             g.end_dlg('c')
         elif sign == 'm':
             self.move(pos, self.agent.a_pos)
+            self.m_score()
         elif sign == 's': #shoot
-            self.arrow +=1
             self.shoot(pos)
+            self.s_score()

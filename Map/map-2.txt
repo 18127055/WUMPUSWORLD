@@ -1,6 +1,6 @@
 10
 -.B.B.-.-.S.B.-.-.-
-B.P.P.B.S.WB.P.B.G.-
+B.P.P.B.S.WB.SP.B.G.-
 -.B.B.G.G.BS.B.-.-.-
 B.P.B.-.B.P.B.-.G.-
 P.B.-.-.-.B.P.BS.-.-

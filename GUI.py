@@ -204,7 +204,7 @@ def end_dlg(s):
         # resize font
         end_game = Canvas(congra_frame, width=300, height=300, bg='mint cream')
         fontStyleNoti = tkFont.Font(family="Lucida Grande", size=18) 
-        Label_noti = Label(end_frame, text='CONGRATUATIONS', width=16, height=0, bg='mint cream', fg='light coral', font=fontStyleNoti) 
+        Label_noti = Label(congra_frame, text='CONGRATUATIONS', width=16, height=0, bg='mint cream', fg='light coral', font=fontStyleNoti) 
         Label_noti.place(x=14, y=100)
 
         congra_img = Image.open(r'../WUMPUSWORLD/Image/congra.png')
