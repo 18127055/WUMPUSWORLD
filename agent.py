@@ -71,45 +71,53 @@ class Wumpus_game(Frame):
                         st_kb += 'P[{i}][{j}] V W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1)
                 self.KB.append(st_kb + ')')
             #B
-            elif self.maze[p[0]][p[1]][1] != 0:
+            elif self.maze[p[0]][p[1]][1] != 0  and self.maze[p[0]][p[1]][6] == 0:
                 st_kb = 'B[{i}][{j}] -> ('.format(i = self.m_size-p[0], j= p[0] + 1)
                 for room in adj_r:
                     if self.maze[room[0]][room[1]][5] == 0 and self.maze[room[0]][room[1]][2] == 0 :
                         self.maze[room[0]][room[1]][0] +=1
+                        if len(st_kb) != 0:
+                            st_kb += ' v '
+                        st_kb += 'P[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1)
                     elif self.maze[room[0]][room[1]][5] == 0 and self.maze[room[0]][room[1]][2] != 0:
                         self.maze[room[0]][room[1]][2] = 0
                         #self.maze[room[0]][room[1]][5] = 1
                         self.KB.append('-W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                         if self.maze[room[0]][room[1]][0] != 0:
                             self.maze[room[0]][room[1]][0] += 1
+                            if len(st_kb) != 0:
+                                st_kb += ' v '
+                            st_kb += 'P[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1)
                         else:
                             self.maze[room[0]][room[1]][5] = 1
+                            self.KB.append('-W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                             self.KB.append('OK[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                         #self.KB.append('P[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
-                    if len(st_kb) != 0:
-                        st_kb += ' v '
-                    st_kb += 'P[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1)
-                self.KB.append(st_kb)
+                self.KB.append(st_kb+')')
             #S
             elif self.maze[p[0]][p[1]][3] != 0:
                 st_kb = 'S[{i}][{j}] -> ('.format(i = self.m_size-p[0], j= p[0] + 1)
                 for room in adj_r:
                     if self.maze[room[0]][room[1]][5] == 0 and self.maze[room[0]][room[1]][0] == 0 :
                         self.maze[room[0]][room[1]][2] +=1
+                        if len(st_kb) != 0:
+                            st_kb += ' v '
+                        st_kb += 'W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1)
                     elif self.maze[room[0]][room[1]][0] != 0 and self.maze[room[0]][room[1]][5] == 0 :
                         self.maze[room[0]][room[1]][0] = 0
                         #self.maze[room[0]][room[1]][5] = 1
                         self.KB.append('-P[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                         if self.maze[room[0]][room[1]][2] != 0:
                             self.maze[room[0]][room[1]][2] += 1
+                            if len(st_kb) != 0:
+                                st_kb += ' v '
+                            st_kb += 'W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1)
                         else:
                             self.maze[room[0]][room[1]][5] = 1
+                            self.KB.append('-W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                             self.KB.append('OK[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
                         #self.KB.append('P[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1))
-                    if len(st_kb) != 0:
-                        st_kb += ' v '
-                    st_kb += 'W[{i}][{j}]'.format(i=self.m_size-room[0], j= room[1]+1)
-                self.KB.append(st_kb)
+                self.KB.append(st_kb+')')
             #empty
             st_kb = 'OK[{i}][{j}] -> ('.format(i = self.m_size-p[0], j= p[1] + 1)
             if self.maze[p[0]][p[1]][3] == 0 and self.maze[p[0]][p[1]][1] == 0 and self.maze[p[0]][p[1]][0] == 0 and self.maze[p[0]][p[1]][2] == 0:
@@ -161,11 +169,13 @@ class Wumpus_game(Frame):
                     self.maze[self.a_pos[0]][self.a_pos[1]][i] = maze[self.a_pos[0]][self.a_pos[1]][i]
 
         def shoot(self, pos):
-            self.maze[pos[0]][pos[1]][2] = 0
-            if self.maze[pos[0]][pos[1]][0] == 0:
+            #self.maze[pos[0]][pos[1]][2] = 0
+            if self.maze[pos[0]][pos[1]][0] == 0 or self.maze[pos[0]][pos[1]][2] == 3 :
                 self.maze[pos[0]][pos[1]][5] = 1
+                self.maze[pos[0]][pos[1]][2] = 0
+                self.maze[pos[0]][pos[1]][0] = 0
+                self.moveable.append(pos)
             n_room = self.adj(pos)
-            self.moveable.append(pos)
             for room in n_room:
                 if self.maze[room[0]][room[1]][3] == 1:
                     self.maze[room[0]][room[1]][2] = 0
@@ -199,16 +209,21 @@ class Wumpus_game(Frame):
                 return sign, 0
             #shoot
             adj_r = self.adj(self.a_pos)
-            for room in adj_r:
-                if self.maze[room[0]][room[1]][2] >= 2:
-                    self.KB.append('W[{i}][{j}] -> Shoot[{i}][{j}]'.format(i = self.m_size - room[0], j = room[1]+1))
-                    sign = self.shoot(room)
-                    self.maze[room[0]][room[1]][2] = 0
-                    print(self.KB)
-                    if self.maze[self.path[0][0]][self.path[0][1]][6] == 0:
-                        self.moveable.append(self.path[0])
-                    self.path.pop(0)
-                    return sign, room
+            wum = [self.maze[room[0]][room[1]][2] for room in adj_r]
+            w_ind = wum.index(max(wum))
+            room = adj_r[w_ind]
+            if self.maze[room[0]][room[1]][2] >= 2:
+                self.KB.append('W[{i}][{j}] -> Shoot[{i}][{j}]'.format(i = self.m_size - room[0], j = room[1]+1))
+                for ar in adj_r:
+                    if room!=ar and self.maze[ar[0]][ar[1]][2] != 0:
+                        self.maze[ar[0]][ar[1]][2] -= 1
+                sign = self.shoot(room)
+                self.maze[room[0]][room[1]][2] = 0
+                print(self.KB)
+                if self.maze[self.path[0][0]][self.path[0][1]][6] == 0:
+                    self.moveable.append(self.path[0])
+                self.path.pop(0)
+                return sign, room
             #climb
             if len(self.moveable) == 0 and self.a_pos == self.cave:
                 print(self.KB)
@@ -225,7 +240,6 @@ class Wumpus_game(Frame):
         def play(self, maze):
             self.getPercept(maze)
             self.agent_path()
-            print(self.moveable)
             return self.action()
 
     def __init__(self, path_file, master=None):
